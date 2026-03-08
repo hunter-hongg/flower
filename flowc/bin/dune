@@ -1,0 +1,3 @@
+(executable
+ (name main)
+ (libraries flowc_lib cmdliner unix toml))
