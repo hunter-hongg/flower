@@ -1,0 +1,10 @@
+workflow build doing 
+  step backend is 
+    xxxx
+  end
+  step package is
+    yyyy
+  end with 
+    deps [backend],
+  finish
+done

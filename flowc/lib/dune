@@ -1,6 +1,6 @@
 (library
  (name flowc_lib)
- (libraries str)
+ (libraries str yojson)
  )
 
 (menhir
