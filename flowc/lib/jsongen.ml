@@ -3,6 +3,7 @@ open Ast
 type step = {
   name: string;
   exec: string;
+  deps: string list;
 }
 
 type parse_res = {
@@ -13,7 +14,20 @@ type parse_res = {
 let process_step steps = 
   List.filter_map (fun step -> (
     match step with 
-    | EStep (_, name, exec, _) -> Some({name = name; exec = exec})
+    | EStep (_, name, exec, deps) -> (
+      let dps = match deps with 
+      | Some (EWith(_, deps)) -> (
+        List.filter_map (fun (EWithAtom (_, name, value)) -> (
+          match name with 
+          | "deps" -> Some(value)
+          | _ -> None
+        )) deps
+      )
+      | None -> [] in
+      let dps = List.map (fun (EArray (_, deps)) -> deps) dps in
+      let dps = List.flatten dps in
+      Some({name = name; exec = exec; deps = dps})
+    )
   )) steps
 
 let step_to_json (steps: step list) =
@@ -21,6 +35,7 @@ let step_to_json (steps: step list) =
     `Assoc [
       ("name", `String step.name);
       ("exec", `String step.exec);
+      ("deps", `List (List.map (fun dep -> `String dep) step.deps));
     ]
   )) steps in 
   res

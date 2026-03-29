@@ -1,9 +1,9 @@
 workflow build doing 
   step backend is 
-    xxxx
+    cat /etc/environment
   end
   step package is
-    yyyy
+    hahaha
   end with 
     deps [backend],
   finish
