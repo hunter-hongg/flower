@@ -4,14 +4,16 @@ Copyright © 2026 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"database/sql"
 	"encoding/json"
 	"flow/internal/jsons"
 	"flow/pkg/color"
-	"flow/pkg/file"
+	ffile "flow/pkg/file"
 	"os"
 	"os/exec"
 	"strings"
 
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
 )
 
@@ -26,37 +28,49 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		curpath := ffile.GetCurPath()
+		defer func() {
+			if r := recover(); r != nil {
+				// 任务执行失败，更新数据库
+				updateDatabase(ffile.GetCWD(), false)
+			}
+		}()
+
 		if len(args) < 1 {
-			color.Error("cannot find flow")
+			return
 		} else if len(args) > 1 {
 			color.Warning("too many args")
 		}
 		flowName := args[0]
 		color.Info("running flow " + flowName)
 		runflow := ".flow/" + flowName + ".flow"
-		if !file.FileExists(runflow) {
-			color.Error("flow " + flowName + " not found")
+		if !ffile.FileExists(runflow) {
+			return
 		}
-		curpath := file.GetCurPath()
 		flowe := curpath + "/flowe"
 		flowc := curpath + "/flowc"
-		if (!file.FileExists(flowe)) || (!file.FileExists(flowc)) {
+		if (!ffile.FileExists(flowe)) || 
+			(!ffile.FileExists(flowc)) {
 			color.Error("binary is not installed properly")
 		}
 		compilation := exec.Command(flowc, runflow)
 		op, err := compilation.CombinedOutput()
 		if err != nil {
+			updateDatabase(ffile.GetCWD(), false)
 			color.Error("compilation failed")
+			return
 		}
 		file := strings.TrimSpace(string(op))
 		context, err := os.ReadFile(file)
 		if err != nil {
 			color.Error("read file failed")
+			return
 		}
 		var p jsons.Plan
 		err = json.Unmarshal(context, &p)
 		if err != nil {
 			color.Error("unmarshal failed")
+			return
 		}
 		color.Info("executing workflow " + p.Workflow)
 		steps := p.Steps
@@ -131,12 +145,69 @@ to quickly create a Cobra application.`,
 				execution := exec.Command(flowe, file, step.Name)
 				err = execution.Run()
 				if err != nil {
+					updateDatabase(ffile.GetCWD(), false)
 					color.Error("execution failed")
 					return
 				}
 			}
 		}
+
+		// 任务执行成功，更新数据库
+		updateDatabase(ffile.GetCWD(), true)
 	},
+}
+
+func updateDatabase(dir string, success bool) {
+	color.Info("connecting database")
+	// 打开数据库连接
+	db, err := sql.Open("sqlite3", 
+		ffile.GetCurPath() + "/flow.db")
+	if err != nil {
+		color.Error("failed to open database: " + err.Error())
+		return
+	}
+	defer db.Close()
+
+	// 创建表（如果不存在）
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS flow (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		dir TEXT UNIQUE,
+		success INTEGER DEFAULT 0,
+		failure INTEGER DEFAULT 0
+	)`)
+	if err != nil {
+		color.Error("failed to create table: " + err.Error())
+		return
+	}
+
+	// 检查目录是否存在
+	var count int
+	err = db.QueryRow("SELECT COUNT(*) FROM flow WHERE dir = ?", dir).Scan(&count)
+	if err != nil {
+		color.Error("failed to query database: " + err.Error())
+		return
+	}
+
+	if count > 0 {
+		// 目录存在，更新数据
+		if success {
+			_, err = db.Exec("UPDATE flow SET success = success + 1 WHERE dir = ?", dir)
+		} else {
+			_, err = db.Exec("UPDATE flow SET failure = failure + 1 WHERE dir = ?", dir)
+		}
+	} else {
+		// 目录不存在，插入数据
+		if success {
+			_, err = db.Exec("INSERT INTO flow (dir, success, failure) VALUES (?, 1, 0)", dir)
+		} else {
+			_, err = db.Exec("INSERT INTO flow (dir, success, failure) VALUES (?, 0, 1)", dir)
+		}
+	}
+
+	if err != nil {
+		color.Error("failed to update database: " + err.Error())
+		return
+	}
 }
 
 func init() {

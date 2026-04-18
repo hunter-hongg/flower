@@ -11,3 +11,10 @@ func GetCurPath() string {
 	}
 	return filepath.Dir(exe)
 }
+func GetCWD() string {
+	t, err := os.Getwd()
+	if err != nil {
+		return ""
+	}
+	return t
+}
