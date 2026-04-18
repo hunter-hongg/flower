@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -29,6 +30,20 @@ type FlowData struct {
 
 func main() {
 	r := gin.Default()
+
+	// 配置 CORS 中间件
+	r.Use(cors.New(cors.Config{
+		AllowOrigins: []string{
+			"http://localhost:*",
+			"http://localhost:5173",
+			"http://localhost:5174",
+			"http://localhost:5175",
+		},
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
 
 	r.GET("/api/status", func(c *gin.Context) {
 		c.JSON(200, gin.H{

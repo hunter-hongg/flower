@@ -9,7 +9,6 @@ workflow test doing
   finish 
   step b is 
     echo hahaha 
-    a
   end with 
     deps [c], 
   finish
