@@ -1,42 +1,40 @@
 # Flow
 
-Flow is a multi-language workflow management tool used to define, compile, and execute workflows. It adopts a modern multi-language technology stack, including Go, OCaml, Rust, and React, to build a complete workflow management ecosystem.
+A modern multi-language workflow management tool for defining, compiling, and executing workflows with a focus on dependency management and real-time status tracking.
 
-## Project Structure
+## 🚀 Features
+
+- **Multi-language Support**: Go, OCaml, Rust, React stack
+- **Workflow Definition**: Define complex workflows with `.flow` files
+- **Dependency Management**: Automatic cyclic dependency detection using DFS
+- **Real-time Status**: Track execution progress via web interface
+- **RESTful API**: Query workflow status programmatically
+- **SQLite Storage**: Persistent execution history
+
+## 📁 Project Structure
 
 ```plaintext
-├── flow/         # Command-line tool (Go)
+├── flow/         # CLI tool (Go)
 ├── flowc/        # Compiler (OCaml)
 ├── flowe/        # Executor (Rust)
-├── flowd-back/   # Backend service (Go + Gin)
-├── flowd-front/  # Frontend interface (React + TypeScript)
-├── project/      # Project-related files
-└── .flow/        # Workflow definition files
+├── flowd-back/   # Backend API (Go + Gin)
+├── flowd-front/  # Web UI (React + TypeScript)
+├── project/      # Project resources
+└── .flow/        # Workflow definitions
 ```
 
-## Core Features
+## 🛠️ Tech Stack
 
-- **Workflow Definition**: Define workflows through `.flow` files, including multiple steps and dependencies between steps
-- **Compilation Process**: Use `flowc` compiler to compile `.flow` files into JSON format workflow definitions
-- **Dependency Analysis**: Use DFS algorithm to detect cyclic dependencies between steps
-- **Execution Order**: Determine the execution order of steps based on dependencies
-- **Step Execution**: Use `flowe` executor to execute each step
-- **Status Recording**: Record execution results (success/failure) to SQLite database
-- **Web Interface**: Provide intuitive workflow execution status display through `flowd-front`
-- **API Interface**: `flowd-back` provides RESTful API interfaces for querying workflow execution status
+| Component | Technology | Purpose |
+| ----------- | ------------ | --------- |
+| CLI Tool | Go + Cobra | User interface & workflow execution |
+| Compiler | OCaml | Flow file parsing & compilation |
+| Executor | Rust | Step execution & monitoring |
+| Backend | Go + Gin | API services & database access |
+| Frontend | React + TypeScript + Vite | Status visualization |
+| Database | SQLite | Execution history storage |
 
-## Technology Stack
-
-| Module | Technology | Purpose |
-| -------- | ------------ | --------- |
-| Command-line tool | Go + Cobra | Provide user interaction interface, execute workflows |
-| Compiler | OCaml | Compile .flow files into JSON format |
-| Executor | Rust | Execute workflow steps |
-| Backend service | Go + Gin | Provide API interfaces, access database |
-| Frontend interface | React + TypeScript + Vite | Display workflow execution status |
-| Data storage | SQLite | Record workflow execution status |
-
-## Installation
+## 📦 Installation
 
 ### Prerequisites
 
@@ -46,51 +44,30 @@ Flow is a multi-language workflow management tool used to define, compile, and e
 - Node.js 18+
 - pnpm
 
-### Build and Install
-
-1. **Compile flow command-line tool**
+### Build Instructions
 
 ```bash
-cd flow
-go build -o flow main.go
+# CLI Tool
+cd flow && go build -o flow main.go
+
+# Compiler
+cd flowc && dune build && cp _build/default/bin/main.exe flowc
+
+# Executor
+cd flowe && cargo build --release && cp target/release/flowe flowe
+
+# Frontend
+cd flowd-front && pnpm install && pnpm run build
+
+# Backend
+cd flowd-back && go build -o flowd-back main.go
 ```
 
-1. **Compile flowc compiler**
-
-```bash
-cd flowc
-dune build
-cp _build/default/bin/main.exe flowc
-```
-
-1. **Compile flowe executor**
-
-```bash
-cd flowe
-cargo build --release
-cp target/release/flowe flowe
-```
-
-1. **Build frontend**
-
-```bash
-cd flowd-front
-pnpm install
-pnpm run build
-```
-
-1. **Compile backend service**
-
-```bash
-cd flowd-back
-go build -o flowd-back main.go
-```
-
-## Usage
+## 🚀 Quick Start
 
 ### 1. Define Workflow
 
-Create a `.flow` file, for example `test.flow`:
+Create `test.flow`:
 
 ```flow
 workflow test doing
@@ -114,38 +91,33 @@ done
 ./flow run test
 ```
 
-### 3. View Execution Status
-
-Start backend service:
+### 3. Monitor Progress
 
 ```bash
+# Start backend
 ./flowd-back
+
+# Start frontend (development)
+cd flowd-front && pnpm run dev
 ```
 
-Start frontend development server:
+Visit `http://localhost:5173` for real-time status.
 
-```bash
-cd flowd-front
-pnpm run dev
-```
+## 📝 Workflow Syntax
 
-Then visit `http://localhost:5173` to view workflow execution status.
-
-## Workflow Definition Syntax
-
-### Basic Syntax
+### Basic Structure
 
 ```flow
 workflow workflow_name doing
   step step_name is
     command
   end with
-    deps  [dependency1, dependency2],
+    deps  [dependency1, dependency2]
   finish
 done
 ```
 
-### Example
+### Example: Build Pipeline
 
 ```flow
 workflow build doing
@@ -165,74 +137,71 @@ workflow build doing
 done
 ```
 
-## API Interfaces
+## 🔌 API Reference
 
-### Get Service Status
+### Service Status
 
-```plaintext
+```bash
 GET /api/status
 ```
 
-### Get Workflow Execution Status
+### Workflow Status
 
-```plaintext
+```bash
 GET /api/flow
 ```
 
-## Architecture Description
+## 🏗️ Architecture
 
-### Workflow Process
+### Workflow Execution Flow
 
-1. **Define Workflow**: User creates `.flow` file, defines workflow name, steps and dependencies
-2. **Compile Workflow**: Use `flowc` compiler to compile `.flow` file into JSON format
-3. **Execute Workflow**: Use `flow run` command to execute workflow, process dependencies and execute steps in order
-4. **Record Status**: Execution results are recorded to SQLite database
-5. **View Status**: View workflow execution status through web interface or API interface
+1. **Define**: Create `.flow` file with steps and dependencies
+2. **Compile**: `flowc` converts to JSON format
+3. **Execute**: `flow run` processes dependencies and executes steps
+4. **Record**: Results stored in SQLite database
+5. **Monitor**: View status via web interface or API
 
-### Core Component Interaction
+### Component Interaction
 
 ```plaintext
-+-------------+      +-------------+      +-------------+
-|   flow      | ---> |   flowc     | ---> |   JSON      |
-+-------------+      +-------------+      +-------------+
-      |                                        |
-      v                                        v
-+-------------+      +-------------+      +-------------+
-|   flowe     | <--- |   flow run  | <--- | Dependency  |
-+-------------+      +-------------+      | Analysis    |
-      |                                   +-------------+ 
-      v
-+-------------+
-|  Execute    |
-|  Steps      |
-+-------------+
-      |
-      v
-+-------------+      +-------------+      +-------------+
-|  Update     | ---> |  SQLite     | <--- |  flowd-back |
-|  Database   |      +-------------+      +-------------+
-+-------------+                                 |
-                                                v
-                                          +-------------+
-                                          |  flowd-front|
-                                          +-------------+
+┌─────────┐    ┌─────────┐    ┌─────────┐
+│  flow   │───▶│  flowc  │───▶│  JSON   │
+└─────────┘    └─────────┘    └─────────┘
+       │           │           │
+       │           │           │
+       ▼           ▼           ▼
+┌─────────┐    ┌─────────┐    ┌─────────┐
+│  flowe  │◀───│  flow   │◀───│  Dep    │
+└─────────┘    └─────────┘    │  Graph  │
+       │           │           └─────────┘
+       │           │
+       ▼           ▼
+┌─────────┐    ┌─────────┐    ┌─────────┐
+│  Update │───▶│ SQLite  │◀───│  API    │
+└─────────┘    └─────────┘    └─────────┘
+       │                         │
+       │                         │
+       ▼                         ▼
+┌─────────┐    ┌─────────┐    ┌─────────┐
+│  Web UI │    │  Status │    │  Front  │
+└─────────┘    └─────────┘    └─────────┘
 ```
 
-## Application Scenarios
+## 🎯 Use Cases
 
-- **CI/CD Pipeline**: Define and execute continuous integration/continuous deployment processes
-- **Data Processing Pipeline**: Build and execute data processing workflows
-- **Automated Tasks**: Define and execute various automated tasks
-- **DevOps Toolchain**: As part of the DevOps toolchain, manage various automated processes
+- **CI/CD Pipelines**: Continuous integration/deployment workflows
+- **Data Processing**: ETL pipelines and data transformation
+- **Automation**: Task scheduling and batch processing
+- **DevOps**: Infrastructure provisioning and deployment
 
-## License
+## 📄 License
 
-MIT License
+MIT
 
-## Contribution
+## 🤝 Contributing
 
-Welcome to submit Issues and Pull Requests!
+Issues and Pull Requests are welcome!
 
-## Author
+## 👤 Author
 
- hunter-hongg
+hunter-hongg

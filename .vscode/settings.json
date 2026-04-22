@@ -4,5 +4,7 @@
     "kind": "opam",
     "switch": "default"
   },
-  "java.configuration.updateBuildConfiguration": "automatic"
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "trae.tab.enableRename": false,
+  "trae.tab.enableAutoImport": false
 }
