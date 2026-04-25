@@ -28,16 +28,43 @@ type FlowData struct {
 	Failure int    `json:"failure"`
 }
 
+// initDB 初始化数据库，自动创建表（如果不存在）
+func initDB() error {
+	dbPath := GetCurPath() + "/flow.db"
+	db, err := sql.Open("sqlite3", dbPath)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	// 测试连接
+	if err = db.Ping(); err != nil {
+		return err
+	}
+
+	// 创建 flow 表（如果不存在）
+	createTableSQL := `CREATE TABLE IF NOT EXISTS flow (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		dir TEXT NOT NULL,
+		success INTEGER DEFAULT 0,
+		failure INTEGER DEFAULT 0
+	);`
+	_, err = db.Exec(createTableSQL)
+	return err
+}
+
 func main() {
+	// 启动时初始化数据库，确保表和文件存在
+	if err := initDB(); err != nil {
+		panic("Failed to initialize database: " + err.Error())
+	}
+
 	r := gin.Default()
 
 	// 配置 CORS 中间件
 	r.Use(cors.New(cors.Config{
-		AllowOrigins: []string{
-			"http://localhost:*",
-			"http://localhost:5173",
-			"http://localhost:5174",
-			"http://localhost:5175",
+		AllowOriginFunc: func(_ string) bool {
+			return true
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},

@@ -27,7 +27,7 @@ const HomePage: React.FC = () => {
         throw new Error('Failed to fetch data');
       }
       const result = await response.json();
-      setFlowData(result.data);
+      setFlowData(result.data ?? []);
     } catch (err) {
       setError('Error fetching data. Please check if the backend is running.');
       console.error(err);
@@ -107,6 +107,40 @@ const HomePage: React.FC = () => {
         >
           {error}
         </Alert>
+      ) : !flowData || flowData.length === 0 ? (
+        <Paper 
+          elevation={4} 
+          sx={{ 
+            p: { xs: 4, sm: 6 }, 
+            mt: 4,
+            borderRadius: '12px',
+            background: 'rgba(255, 255, 255, 0.05)',
+            backdropFilter: 'blur(10px)',
+            animation: 'slideUp 0.5s ease-out',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)',
+            textAlign: 'center'
+          }}
+        >
+          <Typography 
+            variant={isMobile ? "h6" : "h5"} 
+            sx={{
+              fontWeight: 600,
+              color: 'rgba(255, 255, 255, 0.7)',
+              mb: 2
+            }}
+          >
+            No Data Available
+          </Typography>
+          <Typography 
+            variant="body1" 
+            sx={{
+              color: 'rgba(255, 255, 255, 0.5)',
+              mb: 3
+            }}
+          >
+            There is no flow data to display. Please check back later or ensure data is being collected.
+          </Typography>
+        </Paper>
       ) : (
         <Paper 
           elevation={4} 
